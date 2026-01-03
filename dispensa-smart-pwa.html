@@ -171,6 +171,44 @@
             font-size: 14px;
         }
 
+        /* Responsive layout for mobile */
+        @media (max-width: 480px) {
+            .input-section {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .input-section-row {
+                display: flex;
+                gap: 10px;
+            }
+
+            .autocomplete-container {
+                grid-column: 1;
+            }
+
+            .input-qty {
+                width: auto;
+                flex: 1;
+            }
+
+            .input-unit {
+                width: auto;
+                flex: 1;
+                padding: 14px 12px;
+            }
+
+            .add-button {
+                width: 100%;
+                margin-top: 0;
+            }
+
+            .input {
+                font-size: 16px;
+            }
+        }
+
         .suggestions {
             position: absolute;
             top: 100%;
@@ -367,6 +405,27 @@
 
         .action-button:hover {
             transform: scale(1.1);
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            .item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .item-actions {
+                width: 100%;
+                margin-left: 0;
+                justify-content: space-between;
+            }
+
+            .action-button {
+                flex: 1;
+                min-width: 60px;
+                padding: 10px 8px;
+            }
         }
 
         .check-button { background: #fbbf24; color: white; }
@@ -644,25 +703,27 @@
                         />
                         <div id="inventorySuggestions" class="suggestions"></div>
                     </div>
-                    <input
-                        type="text"
-                        id="inventoryQty"
-                        class="input input-qty"
-                        placeholder="Qtà"
-                    />
-                    <select id="inventoryUnit" class="input input-unit">
-                        <option value="pz">pz</option>
-                        <option value="kg">kg</option>
-                        <option value="g">g</option>
-                        <option value="L">L</option>
-                        <option value="ml">ml</option>
-                        <option value="confezione">conf.</option>
-                        <option value="scatola">scat.</option>
-                        <option value="vasetto">vas.</option>
-                        <option value="bottiglia">bott.</option>
-                        <option value="pacco">pacco</option>
-                    </select>
-                    <button class="add-button" onclick="addItem('inventory')">+</button>
+                    <div class="input-section-row">
+                        <input
+                            type="text"
+                            id="inventoryQty"
+                            class="input input-qty"
+                            placeholder="Quantità"
+                        />
+                        <select id="inventoryUnit" class="input input-unit">
+                            <option value="pz">pz</option>
+                            <option value="kg">kg</option>
+                            <option value="g">g</option>
+                            <option value="L">L</option>
+                            <option value="ml">ml</option>
+                            <option value="confezione">conf.</option>
+                            <option value="scatola">scat.</option>
+                            <option value="vasetto">vas.</option>
+                            <option value="bottiglia">bott.</option>
+                            <option value="pacco">pacco</option>
+                        </select>
+                    </div>
+                    <button class="add-button" onclick="addItem('inventory')">+ Aggiungi</button>
                 </div>
 
                 <div id="inventoryNotes" class="notes-section">
@@ -696,25 +757,27 @@
                         />
                         <div id="shoppingSuggestions" class="suggestions"></div>
                     </div>
-                    <input
-                        type="text"
-                        id="shoppingQty"
-                        class="input input-qty"
-                        placeholder="Qtà"
-                    />
-                    <select id="shoppingUnit" class="input input-unit">
-                        <option value="pz">pz</option>
-                        <option value="kg">kg</option>
-                        <option value="g">g</option>
-                        <option value="L">L</option>
-                        <option value="ml">ml</option>
-                        <option value="confezione">conf.</option>
-                        <option value="scatola">scat.</option>
-                        <option value="vasetto">vas.</option>
-                        <option value="bottiglia">bott.</option>
-                        <option value="pacco">pacco</option>
-                    </select>
-                    <button class="add-button" onclick="addItem('shopping')">+</button>
+                    <div class="input-section-row">
+                        <input
+                            type="text"
+                            id="shoppingQty"
+                            class="input input-qty"
+                            placeholder="Quantità"
+                        />
+                        <select id="shoppingUnit" class="input input-unit">
+                            <option value="pz">pz</option>
+                            <option value="kg">kg</option>
+                            <option value="g">g</option>
+                            <option value="L">L</option>
+                            <option value="ml">ml</option>
+                            <option value="confezione">conf.</option>
+                            <option value="scatola">scat.</option>
+                            <option value="vasetto">vas.</option>
+                            <option value="bottiglia">bott.</option>
+                            <option value="pacco">pacco</option>
+                        </select>
+                    </div>
+                    <button class="add-button" onclick="addItem('shopping')">+ Aggiungi</button>
                 </div>
 
                 <div id="shoppingNotes" class="notes-section">
