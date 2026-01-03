@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dispensa Smart - La tua cucina organizzata</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Gestisci il tuo inventario di casa e la lista della spesa con intelligenza">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dispensa Smart">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons for iOS -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px 12px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-icon {
+            font-size: 20px;
+        }
+
+        .content {
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .stats-badge {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+        }
+
+        .stats-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #b45309;
+            line-height: 1;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            color: #92400e;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .autocomplete-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-small {
+            width: 80px;
+        }
+
+        .input-qty {
+            width: 70px;
+        }
+
+        .input-unit {
+            width: 85px;
+            padding: 14px 8px;
+            font-size: 14px;
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 240px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestions.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .suggestion-item:hover {
+            background: #f8fafc;
+        }
+
+        .suggestion-icon {
+            font-size: 28px;
+        }
+
+        .suggestion-info {
+            flex: 1;
+        }
+
+        .suggestion-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .suggestion-category {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .add-button {
+            width: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .add-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        }
+
+        .notes-section {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .notes-section.show {
+            display: block;
+        }
+
+        .notes-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .item.checked {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background: #e2e8f0;
+        }
+
+        .item-left {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .item-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .category-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .item-quantity {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .item-notes {
+            font-size: 13px;
+            color: #475569;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            font-style: italic;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-button:hover {
+            transform: scale(1.1);
+        }
+
+        .check-button { background: #fbbf24; color: white; }
+        .note-button { background: #3b82f6; color: white; }
+        .move-button { background: #10b981; color: white; }
+        .delete-button { background: #ef4444; color: white; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .empty-subtext {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        /* Statistics */
+        .stats-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            color: white;
+        }
+
+        .stats-card-number {
+            font-size: 40px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stats-card-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .pie-chart {
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .category-list {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        .category-list-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 16px;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .category-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .category-item-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .category-item-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .category-item-count {
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .category-item-percent {
+            font-size: 13px;
+            color: #94a3b8;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 2000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+
+        .modal-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-button-cancel {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .modal-button-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* Simple Pie Chart */
+        .simple-pie {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .pie-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🛒 Dispensa Smart</h1>
+            <p>La tua cucina organizzata</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('inventory')">
+                <span class="tab-icon">🏠</span>
+                <span>In Casa</span>
+            </button>
+            <button class="tab" onclick="switchTab('shopping')">
+                <span class="tab-icon">📝</span>
+                <span>Lista Spesa</span>
+            </button>
+            <button class="tab" onclick="switchTab('stats')">
+                <span class="tab-icon">📊</span>
+                <span>Statistiche</span>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Inventory Section -->
+            <div id="inventory" class="section active">
+                <div class="stats-badge">
+                    <div class="stats-number" id="inventoryCount">0</div>
+                    <div class="stats-label">Articoli in casa</div>
+                </div>
+
+                <div class="input-section">
+                    <div class="autocomplete-container">
+                        <input
+                            type="text"
+                            id="inventorySearch"
+                            class="input"
+                            placeholder="Cerca o aggiungi alimento..."
+                            oninput="handleSearch('inventory')"
+                            onfocus="showSuggestions('inventory')"
+                        />
+                        <div id="inventorySuggestions" class="suggestions"></div>
+                    </div>
+                    <input
+                        type="text"
+                        id="inventoryQty"
+                        class="input input-qty"
+                        placeholder="Qtà"
+                    />
+                    <select id="inventoryUnit" class="input input-unit">
+                        <option value="pz">pz</option>
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                        <option value="L">L</option>
+                        <option value="ml">ml</option>
+                        <option value="confezione">conf.</option>
+                        <option value="scatola">scat.</option>
+                        <option value="vasetto">vas.</option>
+                        <option value="bottiglia">bott.</option>
+                        <option value="pacco">pacco</option>
+                    </select>
+                    <button class="add-button" onclick="addItem('inventory')">+</button>
+                </div>
+
+                <div id="inventoryNotes" class="notes-section">
+                    <textarea
+                        id="inventoryNotesInput"
+                        class="notes-input"
+                        placeholder="Aggiungi note personali (es: biologico, marca preferita, scadenza...)"
+                        rows="2"
+                    ></textarea>
+                </div>
+
+                <div id="inventoryList" class="items-list"></div>
+            </div>
+
+            <!-- Shopping Section -->
+            <div id="shopping" class="section">
+                <div class="stats-badge">
+                    <div class="stats-number" id="shoppingCount">0</div>
+                    <div class="stats-label">Da comprare</div>
+                </div>
+
+                <div class="input-section">
+                    <div class="autocomplete-container">
+                        <input
+                            type="text"
+                            id="shoppingSearch"
+                            class="input"
+                            placeholder="Cerca o aggiungi alimento..."
+                            oninput="handleSearch('shopping')"
+                            onfocus="showSuggestions('shopping')"
+                        />
+                        <div id="shoppingSuggestions" class="suggestions"></div>
+                    </div>
+                    <input
+                        type="text"
+                        id="shoppingQty"
+                        class="input input-qty"
+                        placeholder="Qtà"
+                    />
+                    <select id="shoppingUnit" class="input input-unit">
+                        <option value="pz">pz</option>
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                        <option value="L">L</option>
+                        <option value="ml">ml</option>
+                        <option value="confezione">conf.</option>
+                        <option value="scatola">scat.</option>
+                        <option value="vasetto">vas.</option>
+                        <option value="bottiglia">bott.</option>
+                        <option value="pacco">pacco</option>
+                    </select>
+                    <button class="add-button" onclick="addItem('shopping')">+</button>
+                </div>
+
+                <div id="shoppingNotes" class="notes-section">
+                    <textarea
+                        id="shoppingNotesInput"
+                        class="notes-input"
+                        placeholder="Aggiungi note personali (es: biologico, marca preferita, scadenza...)"
+                        rows="2"
+                    ></textarea>
+                </div>
+
+                <div id="shoppingList" class="items-list"></div>
+            </div>
+
+            <!-- Stats Section -->
+            <div id="stats" class="section">
+                <h2 class="stats-title">📊 Analisi Inventario</h2>
+                <div id="statsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 class="modal-title" id="modalTitle"></h3>
+            <textarea
+                id="modalTextarea"
+                class="modal-textarea"
+                rows="4"
+                placeholder="Aggiungi le tue note personali..."
+            ></textarea>
+            <div class="modal-buttons">
+                <button class="modal-button modal-button-cancel" onclick="closeModal()">
+                    Annulla
+                </button>
+                <button class="modal-button modal-button-save" onclick="saveNotes()">
+                    Salva
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Unità di misura disponibili
+        const UNITS = ['pz', 'kg', 'g', 'L', 'ml', 'confezione', 'scatola', 'vasetto', 'bottiglia', 'pacco'];
+
+        // Database alimenti
+        const FOOD_DATABASE = [
+          { id: 1, nome: 'Mela', nomeAlternativo: ['mele', 'mela verde', 'mela rossa'], categoria: 'Frutta', icona: '🍎', unitaPredefinita: 'pz' },
+          { id: 2, nome: 'Banana', nomeAlternativo: ['banane'], categoria: 'Frutta', icona: '🍌', unitaPredefinita: 'pz' },
+          { id: 3, nome: 'Arancia', nomeAlternativo: ['arance'], categoria: 'Frutta', icona: '🍊', unitaPredefinita: 'pz' },
+          { id: 4, nome: 'Pera', nomeAlternativo: ['pere'], categoria: 'Frutta', icona: '🍐', unitaPredefinita: 'pz' },
+          { id: 5, nome: 'Fragola', nomeAlternativo: ['fragole'], categoria: 'Frutta', icona: '🍓', unitaPredefinita: 'g' },
+          { id: 6, nome: 'Uva', nomeAlternativo: [], categoria: 'Frutta', icona: '🍇', unitaPredefinita: 'kg' },
+          { id: 7, nome: 'Kiwi', nomeAlternativo: [], categoria: 'Frutta', icona: '🥝', unitaPredefinita: 'pz' },
+          { id: 8, nome: 'Limone', nomeAlternativo: ['limoni'], categoria: 'Frutta', icona: '🍋', unitaPredefinita: 'pz' },
+          { id: 9, nome: 'Anguria', nomeAlternativo: ['cocomero'], categoria: 'Frutta', icona: '🍉', unitaPredefinita: 'kg' },
+          { id: 10, nome: 'Pesca', nomeAlternativo: ['pesche'], categoria: 'Frutta', icona: '🍑', unitaPredefinita: 'pz' },
+          { id: 60, nome: 'Ananas', nomeAlternativo: [], categoria: 'Frutta', icona: '🍍', unitaPredefinita: 'pz' },
+          { id: 61, nome: 'Mango', nomeAlternativo: [], categoria: 'Frutta', icona: '🥭', unitaPredefinita: 'pz' },
+          { id: 62, nome: 'Ciliegia', nomeAlternativo: ['ciliegie'], categoria: 'Frutta', icona: '🍒', unitaPredefinita: 'g' },
+          { id: 63, nome: 'Avocado', nomeAlternativo: [], categoria: 'Frutta', icona: '🥑', unitaPredefinita: 'pz' },
+          { id: 11, nome: 'Pomodoro', nomeAlternativo: ['pomodori'], categoria: 'Verdura', icona: '🍅', unitaPredefinita: 'kg' },
+          { id: 12, nome: 'Patata', nomeAlternativo: ['patate'], categoria: 'Verdura', icona: '🥔', unitaPredefinita: 'kg' },
+          { id: 13, nome: 'Carota', nomeAlternativo: ['carote'], categoria: 'Verdura', icona: '🥕', unitaPredefinita: 'kg' },
+          { id: 14, nome: 'Cipolla', nomeAlternativo: ['cipolle'], categoria: 'Verdura', icona: '🧅', unitaPredefinita: 'kg' },
+          { id: 15, nome: 'Zucchina', nomeAlternativo: ['zucchine'], categoria: 'Verdura', icona: '🥒', unitaPredefinita: 'kg' },
+          { id: 16, nome: 'Melanzana', nomeAlternativo: ['melanzane'], categoria: 'Verdura', icona: '🍆', unitaPredefinita: 'kg' },
+          { id: 17, nome: 'Peperone', nomeAlternativo: ['peperoni'], categoria: 'Verdura', icona: '🫑', unitaPredefinita: 'pz' },
+          { id: 18, nome: 'Insalata', nomeAlternativo: ['lattuga', 'insalate'], categoria: 'Verdura', icona: '🥬', unitaPredefinita: 'pz' },
+          { id: 19, nome: 'Broccoli', nomeAlternativo: [], categoria: 'Verdura', icona: '🥦', unitaPredefinita: 'kg' },
+          { id: 20, nome: 'Spinaci', nomeAlternativo: [], categoria: 'Verdura', icona: '🌿', unitaPredefinita: 'g' },
+          { id: 64, nome: 'Aglio', nomeAlternativo: [], categoria: 'Verdura', icona: '🧄', unitaPredefinita: 'pz' },
+          { id: 65, nome: 'Funghi', nomeAlternativo: ['fungo'], categoria: 'Verdura', icona: '🍄', unitaPredefinita: 'g' },
+          { id: 66, nome: 'Mais', nomeAlternativo: ['granturco'], categoria: 'Verdura', icona: '🌽', unitaPredefinita: 'scatola' },
+          { id: 21, nome: 'Ceci', nomeAlternativo: [], categoria: 'Legumi', icona: '🫘', unitaPredefinita: 'scatola' },
+          { id: 22, nome: 'Lenticchie', nomeAlternativo: [], categoria: 'Legumi', icona: '🫘', unitaPredefinita: 'g' },
+          { id: 23, nome: 'Fagioli', nomeAlternativo: ['fagiolo'], categoria: 'Legumi', icona: '🫘', unitaPredefinita: 'scatola' },
+          { id: 24, nome: 'Piselli', nomeAlternativo: [], categoria: 'Legumi', icona: '🫛', unitaPredefinita: 'scatola' },
+          { id: 25, nome: 'Fave', nomeAlternativo: [], categoria: 'Legumi', icona: '🫘', unitaPredefinita: 'g' },
+          { id: 26, nome: 'Latte', nomeAlternativo: [], categoria: 'Latticini', icona: '🥛', unitaPredefinita: 'L' },
+          { id: 27, nome: 'Yogurt', nomeAlternativo: [], categoria: 'Latticini', icona: '🥛', unitaPredefinita: 'vasetto' },
+          { id: 28, nome: 'Formaggio', nomeAlternativo: ['formaggi'], categoria: 'Latticini', icona: '🧀', unitaPredefinita: 'g' },
+          { id: 29, nome: 'Mozzarella', nomeAlternativo: [], categoria: 'Latticini', icona: '🧀', unitaPredefinita: 'pz' },
+          { id: 30, nome: 'Parmigiano', nomeAlternativo: ['grana'], categoria: 'Latticini', icona: '🧀', unitaPredefinita: 'g' },
+          { id: 31, nome: 'Burro', nomeAlternativo: [], categoria: 'Latticini', icona: '🧈', unitaPredefinita: 'g' },
+          { id: 68, nome: 'Ricotta', nomeAlternativo: [], categoria: 'Latticini', icona: '🧀', unitaPredefinita: 'g' },
+          { id: 32, nome: 'Pollo', nomeAlternativo: [], categoria: 'Carne', icona: '🍗', unitaPredefinita: 'kg' },
+          { id: 33, nome: 'Manzo', nomeAlternativo: ['carne di manzo'], categoria: 'Carne', icona: '🥩', unitaPredefinita: 'kg' },
+          { id: 34, nome: 'Maiale', nomeAlternativo: ['carne di maiale'], categoria: 'Carne', icona: '🥓', unitaPredefinita: 'kg' },
+          { id: 35, nome: 'Tacchino', nomeAlternativo: [], categoria: 'Carne', icona: '🦃', unitaPredefinita: 'kg' },
+          { id: 36, nome: 'Salsiccia', nomeAlternativo: ['salsicce'], categoria: 'Carne', icona: '🌭', unitaPredefinita: 'kg' },
+          { id: 69, nome: 'Prosciutto', nomeAlternativo: [], categoria: 'Carne', icona: '🥓', unitaPredefinita: 'g' },
+          { id: 37, nome: 'Salmone', nomeAlternativo: [], categoria: 'Pesce', icona: '🐟', unitaPredefinita: 'kg' },
+          { id: 38, nome: 'Tonno', nomeAlternativo: [], categoria: 'Pesce', icona: '🐟', unitaPredefinita: 'scatola' },
+          { id: 39, nome: 'Merluzzo', nomeAlternativo: [], categoria: 'Pesce', icona: '🐟', unitaPredefinita: 'kg' },
+          { id: 40, nome: 'Gamberi', nomeAlternativo: ['gamberetti'], categoria: 'Pesce', icona: '🦐', unitaPredefinita: 'g' },
+          { id: 41, nome: 'Cozze', nomeAlternativo: [], categoria: 'Pesce', icona: '🦪', unitaPredefinita: 'kg' },
+          { id: 70, nome: 'Calamari', nomeAlternativo: ['calamaro'], categoria: 'Pesce', icona: '🦑', unitaPredefinita: 'kg' },
+          { id: 42, nome: 'Pasta', nomeAlternativo: [], categoria: 'Cereali', icona: '🍝', unitaPredefinita: 'pacco' },
+          { id: 43, nome: 'Riso', nomeAlternativo: [], categoria: 'Cereali', icona: '🍚', unitaPredefinita: 'kg' },
+          { id: 44, nome: 'Pane', nomeAlternativo: [], categoria: 'Cereali', icona: '🍞', unitaPredefinita: 'pz' },
+          { id: 45, nome: 'Farina', nomeAlternativo: [], categoria: 'Cereali', icona: '🌾', unitaPredefinita: 'kg' },
+          { id: 46, nome: 'Cereali', nomeAlternativo: ['corn flakes'], categoria: 'Cereali', icona: '🥣', unitaPredefinita: 'scatola' },
+          { id: 47, nome: 'Biscotti', nomeAlternativo: [], categoria: 'Cereali', icona: '🍪', unitaPredefinita: 'pacco' },
+          { id: 48, nome: 'Olio', nomeAlternativo: ['olio di oliva'], categoria: 'Condimenti', icona: '🫒', unitaPredefinita: 'L' },
+          { id: 49, nome: 'Sale', nomeAlternativo: [], categoria: 'Condimenti', icona: '🧂', unitaPredefinita: 'kg' },
+          { id: 50, nome: 'Pepe', nomeAlternativo: [], categoria: 'Condimenti', icona: '🌶️', unitaPredefinita: 'g' },
+          { id: 51, nome: 'Aceto', nomeAlternativo: [], categoria: 'Condimenti', icona: '🍶', unitaPredefinita: 'L' },
+          { id: 52, nome: 'Zucchero', nomeAlternativo: [], categoria: 'Condimenti', icona: '🍯', unitaPredefinita: 'kg' },
+          { id: 71, nome: 'Miele', nomeAlternativo: [], categoria: 'Condimenti', icona: '🍯', unitaPredefinita: 'vasetto' },
+          { id: 53, nome: 'Acqua', nomeAlternativo: ['acqua minerale'], categoria: 'Bevande', icona: '💧', unitaPredefinita: 'bottiglia' },
+          { id: 54, nome: 'Succo', nomeAlternativo: ['succo di frutta'], categoria: 'Bevande', icona: '🧃', unitaPredefinita: 'L' },
+          { id: 55, nome: 'Caffè', nomeAlternativo: [], categoria: 'Bevande', icona: '☕', unitaPredefinita: 'g' },
+          { id: 56, nome: 'Tè', nomeAlternativo: [], categoria: 'Bevande', icona: '🍵', unitaPredefinita: 'scatola' },
+          { id: 57, nome: 'Vino', nomeAlternativo: [], categoria: 'Bevande', icona: '🍷', unitaPredefinita: 'bottiglia' },
+          { id: 58, nome: 'Birra', nomeAlternativo: [], categoria: 'Bevande', icona: '🍺', unitaPredefinita: 'bottiglia' },
+        ];
+
+        const CATEGORY_COLORS = {
+          'Frutta': '#FF6B9D',
+          'Verdura': '#4CAF50',
+          'Legumi': '#8D6E63',
+          'Latticini': '#64B5F6',
+          'Carne': '#EF5350',
+          'Pesce': '#26C6DA',
+          'Cereali': '#FFA726',
+          'Condimenti': '#9575CD',
+          'Bevande': '#42A5F5',
+          'Altro': '#78909C'
+        };
+
+        let inventory = [];
+        let shopping = [];
+        let selectedFood = { inventory: null, shopping: null };
+        let editingItem = null;
+        let currentTab = 'inventory';
+
+        // Load data
+        function loadData() {
+            const savedInventory = localStorage.getItem('dispensa_inventory');
+            const savedShopping = localStorage.getItem('dispensa_shopping');
+            
+            if (savedInventory) inventory = JSON.parse(savedInventory);
+            if (savedShopping) shopping = JSON.parse(savedShopping);
+            
+            renderInventory();
+            renderShopping();
+            renderStats();
+        }
+
+        // Save data
+        function saveData() {
+            localStorage.setItem('dispensa_inventory', JSON.stringify(inventory));
+            localStorage.setItem('dispensa_shopping', JSON.stringify(shopping));
+        }
+
+        // Switch tab
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            event.target.closest('.tab').classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            
+            if (tab === 'stats') {
+                renderStats();
+            }
+        }
+
+        // Handle search
+        function handleSearch(type) {
+            const input = document.getElementById(type + 'Search');
+            const suggestionsDiv = document.getElementById(type + 'Suggestions');
+            const searchTerm = input.value.toLowerCase();
+
+            if (searchTerm.length < 2) {
+                suggestionsDiv.classList.remove('show');
+                suggestionsDiv.innerHTML = '';
+                selectedFood[type] = null;
+                document.getElementById(type + 'Notes').classList.remove('show');
+                return;
+            }
+
+            const matches = FOOD_DATABASE.filter(food => {
+                const nameMatch = food.nome.toLowerCase().includes(searchTerm);
+                const altMatch = food.nomeAlternativo.some(alt => alt.toLowerCase().includes(searchTerm));
+                return nameMatch || altMatch;
+            }).slice(0, 5);
+
+            if (matches.length > 0) {
+                suggestionsDiv.innerHTML = matches.map(food => `
+                    <div class="suggestion-item" onclick="selectFood(${food.id}, '${type}')">
+                        <span class="suggestion-icon">${food.icona}</span>
+                        <div class="suggestion-info">
+                            <div class="suggestion-name">${food.nome}</div>
+                            <div class="suggestion-category">${food.categoria}</div>
+                        </div>
+                    </div>
+                `).join('');
+                suggestionsDiv.classList.add('show');
+            } else {
+                suggestionsDiv.classList.remove('show');
+            }
+        }
+
+        function showSuggestions(type) {
+            const input = document.getElementById(type + 'Search');
+            if (input.value.length >= 2) {
+                handleSearch(type);
+            }
+        }
+
+        function selectFood(id, type) {
+            const food = FOOD_DATABASE.find(f => f.id === id);
+            selectedFood[type] = food;
+            
+            document.getElementById(type + 'Search').value = food.nome;
+            document.getElementById(type + 'Suggestions').classList.remove('show');
+            document.getElementById(type + 'Notes').classList.add('show');
+            
+            // Imposta automaticamente l'unità predefinita
+            if (food.unitaPredefinita) {
+                document.getElementById(type + 'Unit').value = food.unitaPredefinita;
+            }
+        }
+
+        function addItem(type) {
+            const searchInput = document.getElementById(type + 'Search');
+            const qtyInput = document.getElementById(type + 'Qty');
+            const unitSelect = document.getElementById(type + 'Unit');
+            const notesInput = document.getElementById(type + 'NotesInput');
+            
+            const searchTerm = searchInput.value.trim();
+            if (!searchTerm) return;
+
+            const newItem = {
+                id: Date.now(),
+                nome: selectedFood[type] ? selectedFood[type].nome : searchTerm,
+                categoria: selectedFood[type] ? selectedFood[type].categoria : 'Altro',
+                icona: selectedFood[type] ? selectedFood[type].icona : '📦',
+                quantita: qtyInput.value || '1',
+                unita: unitSelect.value,
+                note: notesInput.value,
+                personalizzato: !selectedFood[type],
+                checked: false
+            };
+
+            if (type === 'inventory') {
+                inventory.push(newItem);
+                renderInventory();
+            } else {
+                shopping.push(newItem);
+                renderShopping();
+            }
+
+            saveData();
+
+            // Reset
+            searchInput.value = '';
+            qtyInput.value = '';
+            unitSelect.value = 'pz';
+            notesInput.value = '';
+            selectedFood[type] = null;
+            document.getElementById(type + 'Notes').classList.remove('show');
+            document.getElementById(type + 'Suggestions').classList.remove('show');
+        }
+
+        function renderInventory() {
+            const list = document.getElementById('inventoryList');
+            const count = document.getElementById('inventoryCount');
+            
+            count.textContent = inventory.length;
+
+            if (inventory.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏠</div>
+                        <div class="empty-text">Nessun prodotto in casa</div>
+                        <div class="empty-subtext">Inizia ad aggiungere i tuoi alimenti!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = inventory.map(item => `
+                <div class="item">
+                    <div class="item-left">
+                        <span class="item-icon">${item.icona}</span>
+                        <div class="item-info">
+                            <div class="item-name">${item.nome}</div>
+                            <div class="item-meta">
+                                <span class="category-badge" style="background-color: ${CATEGORY_COLORS[item.categoria] || CATEGORY_COLORS['Altro']}">${item.categoria}</span>
+                                <span class="item-quantity">${item.quantita} ${item.unita || ''}</span>
+                            </div>
+                            ${item.note ? `<div class="item-notes">📌 ${item.note}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-button note-button" onclick="editNotes(${item.id}, 'inventory')">📝</button>
+                        <button class="action-button move-button" onclick="moveToShopping(${item.id})">🛒</button>
+                        <button class="action-button delete-button" onclick="deleteItem(${item.id}, 'inventory')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderShopping() {
+            const list = document.getElementById('shoppingList');
+            const count = document.getElementById('shoppingCount');
+            
+            count.textContent = shopping.length;
+
+            if (shopping.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <div class="empty-text">Lista della spesa vuota</div>
+                        <div class="empty-subtext">Aggiungi i prodotti che devi comprare!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = shopping.map(item => `
+                <div class="item ${item.checked ? 'checked' : ''}">
+                    <div class="item-left">
+                        <span class="item-icon">${item.icona}</span>
+                        <div class="item-info">
+                            <div class="item-name">${item.nome}</div>
+                            <div class="item-meta">
+                                <span class="category-badge" style="background-color: ${CATEGORY_COLORS[item.categoria] || CATEGORY_COLORS['Altro']}">${item.categoria}</span>
+                                <span class="item-quantity">${item.quantita} ${item.unita || ''}</span>
+                            </div>
+                            ${item.note ? `<div class="item-notes">📌 ${item.note}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-button check-button" onclick="toggleCheck(${item.id})">${item.checked ? '✓' : '○'}</button>
+                        <button class="action-button note-button" onclick="editNotes(${item.id}, 'shopping')">📝</button>
+                        <button class="action-button move-button" onclick="moveToInventory(${item.id})">🏠</button>
+                        <button class="action-button delete-button" onclick="deleteItem(${item.id}, 'shopping')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderStats() {
+            const container = document.getElementById('statsContent');
+            
+            if (inventory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📊</div>
+                        <div class="empty-text">Nessun dato disponibile</div>
+                        <div class="empty-subtext">Aggiungi prodotti all'inventario per vedere le statistiche</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate stats
+            const categoryCounts = {};
+            inventory.forEach(item => {
+                const category = item.categoria || 'Altro';
+                categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+            });
+
+            const total = inventory.length;
+            const chartData = Object.entries(categoryCounts)
+                .map(([name, value]) => ({
+                    name,
+                    value,
+                    percentage: ((value / total) * 100).toFixed(1)
+                }))
+                .sort((a, b) => b.value - a.value);
+
+            container.innerHTML = `
+                <div class="stats-overview">
+                    <div class="stats-card">
+                        <div class="stats-card-number">${total}</div>
+                        <div class="stats-card-label">Totale Prodotti</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-number">${Object.keys(categoryCounts).length}</div>
+                        <div class="stats-card-label">Categorie</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">Distribuzione per Categoria</h3>
+                    <canvas id="pieChart" width="300" height="300"></canvas>
+                </div>
+
+                <div class="category-list">
+                    <h3 class="category-list-title">Dettaglio Categorie</h3>
+                    ${chartData.map(cat => `
+                        <div class="category-item">
+                            <div class="category-item-left">
+                                <div class="category-dot" style="background-color: ${CATEGORY_COLORS[cat.name]}"></div>
+                                <span class="category-item-name">${cat.name}</span>
+                            </div>
+                            <div class="category-item-right">
+                                <span class="category-item-count">${cat.value}</span>
+                                <span class="category-item-percent">${cat.percentage}%</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Draw pie chart
+            drawPieChart(chartData);
+        }
+
+        function drawPieChart(data) {
+            const canvas = document.getElementById('pieChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 100;
+            
+            let currentAngle = -Math.PI / 2;
+            
+            data.forEach(segment => {
+                const sliceAngle = (segment.value / inventory.length) * 2 * Math.PI;
+                
+                ctx.fillStyle = CATEGORY_COLORS[segment.name];
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw label
+                const labelAngle = currentAngle + sliceAngle / 2;
+                const labelX = centerX + Math.cos(labelAngle) * (radius + 30);
+                const labelY = centerY + Math.sin(labelAngle) * (radius + 30);
+                
+                ctx.fillStyle = '#1e293b';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${segment.name}`, labelX, labelY);
+                ctx.fillText(`${segment.percentage}%`, labelX, labelY + 15);
+                
+                currentAngle += sliceAngle;
+            });
+        }
+
+        function deleteItem(id, type) {
+            if (type === 'inventory') {
+                inventory = inventory.filter(item => item.id !== id);
+                renderInventory();
+            } else {
+                shopping = shopping.filter(item => item.id !== id);
+                renderShopping();
+            }
+            saveData();
+            if (currentTab === 'stats') renderStats();
+        }
+
+        function moveToShopping(id) {
+            const item = inventory.find(i => i.id === id);
+            if (item) {
+                shopping.push({ ...item, id: Date.now(), checked: false });
+                inventory = inventory.filter(i => i.id !== id);
+                renderInventory();
+                renderShopping();
+                saveData();
+                if (currentTab === 'stats') renderStats();
+            }
+        }
+
+        function moveToInventory(id) {
+            const item = shopping.find(i => i.id === id);
+            if (item) {
+                inventory.push({ ...item, id: Date.now(), checked: false });
+                shopping = shopping.filter(i => i.id !== id);
+                renderInventory();
+                renderShopping();
+                saveData();
+                if (currentTab === 'stats') renderStats();
+            }
+        }
+
+        function toggleCheck(id) {
+            const item = shopping.find(i => i.id === id);
+            if (item) {
+                item.checked = !item.checked;
+                renderShopping();
+                saveData();
+            }
+        }
+
+        function editNotes(id, type) {
+            const item = (type === 'inventory' ? inventory : shopping).find(i => i.id === id);
+            if (item) {
+                editingItem = { item, type };
+                document.getElementById('modalTitle').textContent = `${item.icona} Modifica Note - ${item.nome}`;
+                document.getElementById('modalTextarea').value = item.note || '';
+                document.getElementById('modal').classList.add('show');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+            editingItem = null;
+        }
+
+        function saveNotes() {
+            if (!editingItem) return;
+            
+            const notes = document.getElementById('modalTextarea').value;
+            editingItem.item.note = notes;
+            
+            if (editingItem.type === 'inventory') {
+                renderInventory();
+            } else {
+                renderShopping();
+            }
+            
+            saveData();
+            closeModal();
+        }
+
+        // Click outside to close suggestions
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.autocomplete-container')) {
+                document.querySelectorAll('.suggestions').forEach(s => s.classList.remove('show'));
+            }
+        });
+
+        // Enter key to add
+        ['inventory', 'shopping'].forEach(type => {
+            document.getElementById(type + 'Search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addItem(type);
+            });
+            document.getElementById(type + 'Qty').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addItem(type);
+            });
+        });
+
+        // Load on start
+        loadData();
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrato con successo:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Registrazione Service Worker fallita:', error);
+                    });
+            });
+        }
+
+        // Install prompt
+        let deferredPrompt;
+        const installButton = document.createElement('button');
+        installButton.textContent = '📲 Installa App';
+        installButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+            z-index: 9999;
+            display: none;
+            animation: pulse 2s infinite;
+        `;
+
+        document.body.appendChild(installButton);
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.style.display = 'block';
+        });
+
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                deferredPrompt = null;
+                installButton.style.display = 'none';
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('App installata con successo!');
+            installButton.style.display = 'none';
+        });
+    </script>
+
+    <style>
+        @keyframes pulse {
+            0%, 100% {
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.05);
+            }
+        }
+    </style>
+</body>
+</html>
